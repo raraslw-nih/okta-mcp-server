@@ -33,6 +33,8 @@ TOOL_SCOPE_REGISTRY: dict[str, str] = {
     "get_user_profile_attributes":          "okta.users.read",
     "create_user":                          "okta.users.manage",
     "update_user":                          "okta.users.manage",
+    "unlock_user":                          "okta.users.manage",
+    "activate_user":                        "okta.users.manage",
     "deactivate_user":                      "okta.users.manage",
     "delete_deactivated_user":              "okta.users.manage",
     # ------------------------------------------------------------------

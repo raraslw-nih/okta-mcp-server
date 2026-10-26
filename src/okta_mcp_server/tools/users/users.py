@@ -403,6 +403,108 @@ async def update_user(user_id: str, profile: dict, ctx: Context = None) -> list:
 @require_scopes("okta.users.manage", error_return_type="list")
 @validate_ids("user_id")
 @json_response
+async def unlock_user(user_id: str, ctx: Context = None) -> list:
+    """Unlock a locked-out user in the Okta organization.
+
+    This tool unlocks a user whose status is LOCKED_OUT.
+
+    Parameters:
+        user_id (str, required): The ID of the user to unlock.
+
+    Returns:
+        List containing the result of the unlock operation.
+    """
+    logger.info(f"Unlock requested for user: {user_id}")
+
+    manager = ctx.request_context.lifespan_context.okta_auth_manager
+
+    try:
+        client = await get_okta_client(manager)
+        logger.debug(f"Calling Okta API to unlock user {user_id}")
+
+        result = await client.unlock_user(user_id)
+        err = result[-1]
+
+        if err:
+            logger.error(f"Okta API error while unlocking user {user_id}: {err}")
+            return [{"error": str(err)}]
+
+        logger.info(f"Successfully unlocked user: {user_id}")
+        return [{"message": f"User {user_id} unlocked successfully."}]
+
+    except Exception as e:
+        logger.error(
+            f"Exception while unlocking user {user_id}: "
+            f"{type(e).__name__}: {e}"
+        )
+        return [{"exception": str(e)}]
+
+
+@mcp.tool()
+@require_scopes("okta.users.manage", error_return_type="list")
+@validate_ids("user_id")
+@json_response
+async def activate_user(
+    user_id: str,
+    send_email: bool = False,
+    ctx: Context = None,
+) -> list:
+    """Activate a user in the Okta organization.
+
+    Activates a user in STAGED or DEPROVISIONED status.
+
+    Parameters:
+        user_id (str, required): The ID of the user to activate.
+        send_email (bool, optional): Whether Okta should send the user an
+            activation email. Defaults to False.
+
+    Returns:
+        List containing the result of the activation operation.
+    """
+    logger.info(f"Activation requested for user: {user_id}")
+
+    if not isinstance(send_email, bool):
+        return ["Error: send_email must be a boolean."]
+
+    manager = ctx.request_context.lifespan_context.okta_auth_manager
+
+    try:
+        client = await get_okta_client(manager)
+
+        logger.debug(
+            f"Calling Okta API to activate user {user_id} "
+            f"with send_email={send_email}"
+        )
+
+        result = await client.activate_user(
+            user_id,
+            send_email=send_email,
+        )
+
+        err = result[-1]
+
+        if err:
+            logger.error(
+                f"Okta API error while activating user {user_id}: {err}"
+            )
+            return [f"Error: {err}"]
+
+        logger.info(f"Successfully activated user: {user_id}")
+
+        return [f"User {user_id} activated successfully."]
+
+    except Exception as e:
+        logger.error(
+            f"Exception while activating user {user_id}: "
+            f"{type(e).__name__}: {e}"
+        )
+        return [f"Exception: {e}"]
+
+
+@mcp.tool()
+@require_scopes("okta.users.manage", error_return_type="list")
+@validate_ids("user_id")
+@json_response
 async def deactivate_user(user_id: str, ctx: Context = None) -> list:
     """Deactivates a user from the Okta organization.
 
