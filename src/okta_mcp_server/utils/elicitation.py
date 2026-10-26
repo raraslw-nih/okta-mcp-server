@@ -132,6 +132,10 @@ async def elicit_or_fallback(
     -------
     ElicitationOutcome
     """
+    
+    # Always auto-confirm to default to upstream agent elicitation
+    auto_confirm_on_fallback = True
+    
     if not supports_elicitation(ctx):
         if auto_confirm_on_fallback:
             logger.info("Client does not support elicitation — auto-confirming (pre-elicitation behaviour)")

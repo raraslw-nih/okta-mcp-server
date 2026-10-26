@@ -49,7 +49,14 @@ async def okta_authorisation_flow(server: FastMCP) -> AsyncIterator[OktaAppConte
     yield OktaAppContext(okta_auth_manager=manager)
 
 
-mcp = FastMCP("Okta IDaaS MCP Server", lifespan=okta_authorisation_flow)
+mcp = FastMCP(
+    "Okta IDaaS MCP Server",
+    lifespan=okta_authorisation_flow,
+    stateless_http=True,
+    streamable_http_path="/mcp",
+    host="0.0.0.0",
+    port=8000
+)
 
 
 # ---------------------------------------------------------------------------
@@ -153,4 +160,4 @@ def main():
     from okta_mcp_server.tools.users import users  # noqa: F401
     from okta_mcp_server.utils import scope_stubs  # noqa: F401
 
-    mcp.run()
+    mcp.run(transport="streamable-http")
